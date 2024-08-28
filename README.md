@@ -12,16 +12,16 @@ O projeto **Lazy Coin** tem como objetivo desenvolver um sistema semelhante a um
   - Implementação de uma blockchain de nó único, sem algoritmos complexos de consenso.
 
 - **Endpoints HTTP**:
-  1 . `GET /chain`: Retorna toda a blockchain em formato JSON.
-  2. `GET /pending`: Lista todas as transações pendentes de inclusão na blockchain.
-  3. `GET /block/:number`: Retorna o bloco específico pelo número fornecido.
-  4. `GET /transaction/:id`: Retorna a transação com o ID especificado.
-  5. `GET /wallet/`: Lista todas as carteiras registradas na blockchain.
-  6. `GET /wallet/:id`: Retorna saldo e transações de uma carteira específica.
-  7. `GET /balance/:id`: Retorna apenas o saldo de uma carteira específica.
-  8. `POST /wallet`: Cria uma nova carteira e retorna um par de chaves assimétricas.
-  9. `POST /mine`: Minera um novo bloco, esvaziando as transações pendentes.
-  10. `POST /transfer`: Realiza uma transação entre duas carteiras.
+  1 - `GET /chain`: Retorna toda a blockchain em formato JSON.
+  2 - `GET /pending`: Lista todas as transações pendentes de inclusão na blockchain.
+  3 - `GET /block/:number`: Retorna o bloco específico pelo número fornecido.
+  4 - `GET /transaction/:id`: Retorna a transação com o ID especificado.
+  5 - `GET /wallet/`: Lista todas as carteiras registradas na blockchain.
+  6 - `GET /wallet/:id`: Retorna saldo e transações de uma carteira específica.
+  7 - `GET /balance/:id`: Retorna apenas o saldo de uma carteira específica.
+  8 - `POST /wallet`: Cria uma nova carteira e retorna um par de chaves assimétricas.
+  9 - `POST /mine`: Minera um novo bloco, esvaziando as transações pendentes.
+  10 - `POST /transfer`: Realiza uma transação entre duas carteiras.
 
 ## Front-End
 
