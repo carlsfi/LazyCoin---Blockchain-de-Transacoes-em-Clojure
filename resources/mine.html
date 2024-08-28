@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+
+<head>
+    <title>LazyCoin — Wallet</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.jade.min.css" />
+    <style>
+        nav h1 {
+            margin: 0;
+        }
+
+        #pending-data {
+            padding: 16px;
+        }
+
+        input, fieldset {
+            margin-bottom: 4px !important;
+        }
+
+        input[type="checkbox"][role="switch"] {
+            width: 40px;
+            height: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <nav>
+            <ul>
+                <li>
+                    <h1>LazyCoin (L$)</h1>
+                </li>
+            </ul>
+            <ul>
+                <li><a href="/">Blockchain</a></li>
+                <li><a href="/wallet">Carteira</a></li>
+                <li><a href="/transfer">Transferir</a></li>
+                <li><a href="/track">Rastrear Carteira</a></li>
+                <li><a href="/transaction">Rastrear Transação</a></li>
+                <li><a href="/mine">Minerar</a></li>
+                <li></li>
+                <li><input id="themeSwitch" name="terms" type="checkbox" role="switch" /> </li>
+            </ul>
+        </nav>
+
+        <article>
+            <header><b>Transações Pendentes</b></header>
+            <pre id="pending-data">[]</pre>
+        </article>
+
+        <article>
+            
+            <header>
+                <b>Minerar Bloco</b>
+            </header>
+
+            <form>
+            
+                <fieldset>
+                    <label>Nonce <input id="nonce" name="nonce" placeholder="0" disabled/></label>
+                    <label>Hash <input id="hash" name="hash'" placeholder="0000000000000000000000000000000000000000000000000000000000000000" disabled/></label>
+                </fieldset>
+
+                <p><b>Duração da Mineração:</b> <span id="mine-time">00:00</span></p>
+                <div id="mine-info" style="display: none;">
+                    <p><b>Minerando...</b></p>
+                    <progress></progress>
+                </div>
+
+                <input id="mine" type="button" onclick="mine_block()" value="Minerar" disabled/>
+
+            </form>
+
+        </article>
+
+    </main>
+
+</body>
+
+<script>
+    
+    const BUTTON = document.getElementById("mine")
+
+    const REFRESH_TIME = 3
+    
+    let is_mining = false
+    let mining_start = null
+
+    const format_time = (duration) => {
+
+        const seconds = Math.floor(duration / 1000)
+        const minutes = Math.floor(seconds / 60)
+        
+        const f_seconds = String(seconds % 60).padStart(2, '0')
+        const f_minutes = String(minutes % 60).padStart(2, '0')
+        
+        return `${f_minutes}:${f_seconds}`
+
+    }
+
+    const check_pending = async () => {
+
+        // Verifique as transações pendentes através da API.
+        let pending = await fetch("/pending", { method: "GET" })
+
+        // Espere pelo JSON da API.
+        let json = await pending.json()
+
+        // Retorne o JSON.
+        return json
+
+    }
+
+    const mine_block = async () => {
+
+        // Desative o botão de minerar.
+        BUTTON.setAttribute("disabled", "")
+
+        // Defina como "minerando". Este é o tempo inicial da mineração.
+        is_mining = true
+        mining_start = new Date()
+        document.getElementById("mine-info").style.display = "block"
+
+        // Minere através da API.
+        let request = await fetch("/mine", { method: "POST" })
+
+        // Espere pelo JSON da API.
+        let json = await request.json()
+        
+        // Se o JSON tiver os campos "nonce" e "hash"..
+        if (json.nonce && json.hash) {
+
+            // Defina os campos do formulário.
+            document.getElementById("nonce").setAttribute("value", json["nonce"])
+            document.getElementById("hash").setAttribute("value", json["hash"])
+
+        }
+
+        // Defina como "não minerando".
+        is_mining = false
+        document.getElementById("mine-info").style.display = "none"
+
+        // Ative o botão de minerar.
+        BUTTON.removeAttribute("disabled")
+
+    }
+
+    const update_pending = async () => {
+
+        // Verifique se há transações pendentes.
+        let pending = await check_pending()
+
+        // Mostre os dados que estão pendentes para mineração.
+        document.getElementById("pending-data").innerText = JSON.stringify(pending, null, 4)
+
+        // Se houver mais que uma mudança pendente..
+        if (pending.length >= 1) {
+            if (is_mining === false) {
+                BUTTON.removeAttribute("disabled")
+            }
+        }
+
+    }
+    
+    update_pending()
+
+    setInterval(async () => {
+
+        await update_pending()
+
+    }, 1000)
+
+    setInterval(async () => {
+
+        if (is_mining) {
+            document.getElementById("mine-time").innerText = format_time((new Date()) - mining_start)
+        }
+
+    }, 1000)
+
+    const THEME_SWITCH = document.getElementById("themeSwitch")
+
+    // Verifique e aplique o tema salvo no localStorage
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+         document.documentElement.setAttribute("data-theme", savedTheme);
+          THEME_SWITCH.checked = savedTheme === "dark";
+    }
+    
+     THEME_SWITCH.addEventListener("change", () => {
+          const currentTheme = document.documentElement.getAttribute("data-theme");
+          const newTheme = currentTheme === "light" ? "dark" : "light";
+          document.documentElement.setAttribute("data-theme", newTheme);
+
+          // Salve o novo tema no localStorage
+           localStorage.setItem("theme", newTheme);
+    })
+
+</script>
+
+</html>

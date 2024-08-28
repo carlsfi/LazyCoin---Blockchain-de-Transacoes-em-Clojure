@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+
+<head>
+    <title>LazyCoin — Wallet</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.jade.min.css" />
+    <style>
+        nav h1 {
+            margin: 0;
+        }
+
+        input[type="checkbox"][role="switch"] {
+            width: 40px;
+            height: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <nav>
+            <ul>
+                <li>
+                    <h1>LazyCoin (L$)</h1>
+                </li>
+            </ul>
+            <ul>
+                <li><a href="/">Blockchain</a></li>
+                <li><a href="/wallet">Carteira</a></li>
+                <li><a href="/transfer">Transferir</a></li>
+                <li><a href="/track">Rastrear Carteira</a></li>
+                <li><a href="/transaction">Rastrear Transação</a></li>
+                <li><a href="/mine">Minerar</a></li>
+                <li></li>
+                <li><input id="themeSwitch" name="terms" type="checkbox" role="switch" /> </li>
+            </ul>
+        </nav>
+
+        <br>
+
+        <article>
+            
+            <header>
+                <b>Sua Carteira</b>
+            </header>
+
+            <form>
+            
+                <fieldset>
+                    <label>Chave Pública <input id="public-key" name="public-key" placeholder="Sem chave pública definida." readonly/></label>
+                    <label>Chave Privada <input id="private-key" name="private-key" placeholder="Sem chave privada definida." readonly/></label>
+                </fieldset>
+
+                <div role="group">
+                    <button id="create-keypair" type="button" onclick="generate_keypair()">Criar Carteira</button>
+                    <button id="delete-keypair" type="button" onclick="delete_keypair()" class="secondary">Deletar Carteira</button>
+                </div>
+
+            </form>
+
+        </article>
+
+    </main>
+
+</body>
+
+<script>
+
+    const CREATE_KEYPAIR_BTN = document.getElementById("create-keypair")
+    const DELETE_KEYPAIR_BTN = document.getElementById("delete-keypair")
+
+    const PUBLIC_KEY_INP = document.getElementById("public-key")
+    const PRIVATE_KEY_INP = document.getElementById("private-key")
+
+    const THEME_SWITCH = document.getElementById("themeSwitch")
+
+    // Verifique e aplique o tema salvo no localStorage
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        THEME_SWITCH.checked = savedTheme === "dark";
+    }
+        
+    THEME_SWITCH.addEventListener("change", () => {
+        
+        const current_theme = document.documentElement.getAttribute("data-theme")
+        const new_theme = current_theme === "light" ? "dark" : "light"
+        document.documentElement.setAttribute("data-theme", new_theme)
+
+        // Salve o novo tema no localstorage
+        localStorage.setItem("theme", new_theme)
+
+    })
+
+    const generate_keypair = async () => {
+        
+        // Previna-o de criar uma nova chave.
+        CREATE_KEYPAIR_BTN.setAttribute("disabled", "")
+
+        // Crie um par de chaves através da API.
+        let keypair = await fetch("/wallet", { method: "POST" })
+
+        // Extraia o JSON da resposta da requisição.
+        let json = await keypair.json()
+
+        // Defina a chave pública e privada no `localStorage`.
+        localStorage.setItem("PUBLIC_KEY", json["public-key"])
+        localStorage.setItem("PRIVATE_KEY", json["private-key"])
+
+        // Defina os valores dos inputs.
+        PUBLIC_KEY_INP.setAttribute("value", json["public-key"])
+        PRIVATE_KEY_INP.setAttribute("value", json["private-key"])
+
+        // Permita que o usuário delete a chave.
+        DELETE_KEYPAIR_BTN.removeAttribute("disabled")
+
+    }
+
+    const delete_keypair = async () => {
+        
+        // Não permita que o usuário delete a chave.
+        DELETE_KEYPAIR_BTN.setAttribute("disabled", "")
+
+        // Limpe o `localStorage`.
+        localStorage.clear()
+
+        // Limpe os valores dos inputs.
+        PUBLIC_KEY_INP.setAttribute("value", "")
+        PRIVATE_KEY_INP.setAttribute("value", "")
+
+        // Permita que o usuário crie uma chave.
+        CREATE_KEYPAIR_BTN.removeAttribute("disabled")
+
+    }
+
+    // Verifique se existe uma chave pública e privada no `localStorage`.
+    if (localStorage.getItem("PUBLIC_KEY") && localStorage.getItem("PRIVATE_KEY")) {
+        
+        // Defina os valores dos inputs.
+        PUBLIC_KEY_INP.setAttribute("value", localStorage.getItem("PUBLIC_KEY"))
+        PRIVATE_KEY_INP.setAttribute("value", localStorage.getItem("PRIVATE_KEY"))
+
+        // Caso o usuário já tenha uma chave pública/privada, previna-o de criar.
+        CREATE_KEYPAIR_BTN.setAttribute("disabled", "")
+
+    } else {
+
+        // Se o par de chaves não existe, não permita que o usuário delete a chave.
+        DELETE_KEYPAIR_BTN.setAttribute("disabled", "")
+
+    }
+
+</script>
+
+</html>

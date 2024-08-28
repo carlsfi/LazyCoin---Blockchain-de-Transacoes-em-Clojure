@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+
+<head>
+    <title>LazyCoin — Transaction</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.jade.min.css" />
+    <style>
+        nav h1 {
+            margin: 0;
+        }
+
+        input, fieldset {
+            margin-bottom: 4px !important;
+        }
+
+        #message {
+            font-weight: bold;
+        }
+
+        input[type="checkbox"][role="switch"] {
+            width: 40px;
+            height: 20px;
+        }
+
+        #transaction-info {
+            display: none; /* Ocultar inicialmente as informações da transação */
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <nav>
+            <ul>
+                <li>
+                    <h1>LazyCoin (L$)</h1>
+                </li>
+            </ul>
+            <ul>
+                <li><a href="/">Blockchain</a></li>
+                <li><a href="/wallet">Carteira</a></li>
+                <li><a href="/transfer">Transferir</a></li>
+                <li><a href="/track">Rastrear Carteira</a></li>
+                <li><a href="/transaction">Rastrear Transação</a></li>
+                <li><a href="/mine">Minerar</a></li>
+                <li></li>
+                <li><input id="theme-switch" name="terms" type="checkbox" role="switch" /> </li>
+            </ul>
+        </nav>
+
+        <article>
+            
+            <header>
+                <b>Rastrear Transação</b>
+            </header>
+
+            <form>
+                <fieldset>
+                    <input id="transaction" placeholder="Insira o endereço da transação que você deseja rastrear."/>
+                </fieldset>
+
+                <p id="message"></p>
+
+                <input id="transaction" type="button" onclick="track_transaction()" value="Rastrear">
+
+            </form>
+        </article>
+
+        <article id="transaction-info">
+            <header><b>Informações da Transação</b></header>
+            <label><b>ID:</b> <code id="tr-id"></code></label>
+            <label><b>Valor:</b> <code id="tr-amount"></code></label>
+            <label><b>Remetente:</b> <code id="tr-from"></code></label>
+            <label><b>Destinatário:</b> <code id="tr-to"></code></label>
+        </article>
+
+    </main>
+
+</body>
+
+<script>
+
+    const TRANSACTION = document.getElementById("transaction")
+    const THEME_SWITCH = document.getElementById("theme-switch")
+    const TRANSACTION_INFO = document.getElementById("transaction-info")
+
+    // Verifique e aplique o tema salvo no localStorage
+    const savedTheme = localStorage.getItem("theme")
+    if (savedTheme) {
+        document.documentElement.setAttribute("data-theme", savedTheme)
+        THEME_SWITCH.checked = savedTheme === "dark"
+    }
+
+    THEME_SWITCH.addEventListener("change", () => {
+        const currentTheme = document.documentElement.getAttribute("data-theme")
+        const newTheme = currentTheme === "light" ? "dark" : "light"
+        document.documentElement.setAttribute("data-theme", newTheme)
+
+        // Salve o novo tema no localStorage
+        localStorage.setItem("theme", newTheme)
+    });
+
+    const track_transaction = async () => {
+        
+        // Verifique se uma carteira foi selecionada
+        if (!TRANSACTION.value) {
+            alert("Por favor, insira um ID de transação.")
+            return
+        }
+
+        // Extraia o ID do `<input>`.
+        let id = TRANSACTION.value
+
+        // Pegue a transação através da API.
+        let request = await fetch(`/transaction/${id}`, { method: "GET" })
+    
+        // Extraia o JSON da resposta da requisição.
+        let json = await request.json()
+
+        console.log(json)
+
+        if (!json.id) {
+            return
+        }
+
+        document.getElementById("tr-id").innerText = json.id
+        document.getElementById("tr-amount").innerText = json.amount
+        document.getElementById("tr-from").innerText = json.from.substring(0, 16) + "..."
+        document.getElementById("tr-to").innerText = json.to.substring(0, 16) + "..."
+
+        // Exemplo de exibição das informações (substitua com sua lógica real)
+        TRANSACTION_INFO.style.display = "block" // Exibindo as informações da transação
+
+    }
+
+</script>
+
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+
+<head>
+    <title>LazyCoin — Blockchain</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.jade.min.css" />
+    <style>
+        nav h1 {
+            margin: 0;
+        }
+
+        .blocks {
+            display: flex;
+            flex-direction: row;
+            overflow-x: auto;
+            gap: 32px;
+            padding: 32px;
+        }
+
+        .blocks article {
+            flex: 0 0 auto;
+            width: 500px;
+            font-size: 0.8em;
+        }
+
+        .blocks article header {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .blocks article p, .blocks article pre {
+            margin-bottom: 12px;
+        }
+
+        .blocks article p:last-child, .blocks article pre:last-child {
+            margin-bottom: 0px;
+        }
+
+        .blocks article pre {
+            padding: 10px
+        }
+
+        .hash {
+            color: gray;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .unselectable {
+            user-select: none;
+        }
+
+        input[type="checkbox"][role="switch"] {
+            width: 40px;
+            height: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <nav>
+            <ul>
+                <li>
+                    <h1>LazyCoin (L$)</h1>
+                </li>
+            </ul>
+            <ul>
+                <li><a href="/">Blockchain</a></li>
+                <li><a href="/wallet">Carteira</a></li>
+                <li><a href="/transfer">Transferir</a></li>
+                <li><a href="/track">Rastrear Carteira</a></li>
+                <li><a href="/transaction">Rastrear Transação</a></li>
+                <li><a href="/mine">Minerar</a></li>
+                <li></li>
+                <li><input id="themeSwitch" name="terms" type="checkbox" role="switch" /> </li>
+            </ul>
+        </nav>
+
+        <div class="blocks" id="blockchain"></div>
+
+    </main>
+
+</body>
+
+<script>
+
+    const THEME_SWITCH = document.getElementById("themeSwitch")
+
+    // Verifique e aplique o tema salvo no localStorage
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+         document.documentElement.setAttribute("data-theme", savedTheme);
+          THEME_SWITCH.checked = savedTheme === "dark";
+    }
+    
+     THEME_SWITCH.addEventListener("change", () => {
+          const currentTheme = document.documentElement.getAttribute("data-theme");
+          const newTheme = currentTheme === "light" ? "dark" : "light";
+          document.documentElement.setAttribute("data-theme", newTheme);
+
+          // Salve o novo tema no localStorage
+           localStorage.setItem("theme", newTheme);
+    })
+
+    const MAX_TIME = 3
+
+    const blockchain = document.getElementById("blockchain")
+
+    // Esta é a última alteração da blockchain.
+    let last_blockchain_data = {}
+    
+    const copy_to_clipboard = (value) => {
+        navigator.clipboard.writeText(value)
+    }
+
+    const update_blockchain = async () => {
+
+        // Faça a requisição da blockchain através da API.
+        let chain = await fetch("/chain", { method: "GET" })
+
+        // Extraia o JSON da resposta da requisição.
+        let json = await chain.json()
+
+        // Caso não tenha tido nenhuma alteração na blockchain, pare.
+        if (JSON.stringify(json) == JSON.stringify(last_blockchain_data)) {
+            return
+        }
+
+        // Caso a blockchain tenha mudado, redefina-a.
+        last_blockchain_data = JSON.parse(JSON.stringify(json))
+
+        // Este será o HTML de blocos.
+        let html = ""
+
+        // Itere sobre todos os blocos da blockchain.
+        for (const number of Object.keys(json)) {
+
+            // Extraia os dados do bloco.
+            let data = json[number]
+
+            // Sanitize os dados do bloco.
+            data.data = JSON.stringify(data.data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+            // Adicione o bloco no HTML.
+            html += `
+                <article>
+                    <header>Bloco #${data.number}</header>
+                    <p><b class="unselectable">Nonce:</b> ${data.nonce}</p>
+                    <p><pre>${data.data}</pre></p>
+                    <p><b class="unselectable">Prévio:</b> <span class="hash">${data.previous}</span></p>
+                    <p><b class="unselectable">Hash:</b> <span class="hash">${data.hash}</span></p>
+                </article>
+            `
+
+        }
+
+        // Defina o HTML da blockchain como esta lista de elementos.
+        blockchain.innerHTML = html
+
+    }
+
+    // ...
+    update_blockchain()
+
+    setInterval(async () => {
+
+        // Atualize a blockchain.
+        await update_blockchain()
+
+    }, 1000)
+
+</script>
+
+</html>
