@@ -12,6 +12,7 @@ O projeto **Lazy Coin** tem como objetivo desenvolver um sistema semelhante a um
   - Implementação de uma blockchain de nó único, sem algoritmos complexos de consenso.
 
 - **Endpoints HTTP**:
+  
   1 - `GET /chain`: Retorna toda a blockchain em formato JSON.
   
   2 - `GET /pending`: Lista todas as transações pendentes de inclusão na blockchain.
